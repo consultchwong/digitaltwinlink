@@ -8,6 +8,7 @@ import { Character, Mission, ChatMessage } from "@/types/character";
 interface ChatInterfaceProps {
   character: Character;
   mission: Mission;
+  sessionId?: string;
   onBack?: () => void;
 }
 
@@ -22,7 +23,7 @@ const demoMessages: ChatMessage[] = [
   },
 ];
 
-export function ChatInterface({ character, mission, onBack }: ChatInterfaceProps) {
+export function ChatInterface({ character, mission, sessionId, onBack }: ChatInterfaceProps) {
   const [messages, setMessages] = useState<ChatMessage[]>(demoMessages);
   const [input, setInput] = useState("");
   const [isTyping, setIsTyping] = useState(false);
@@ -41,7 +42,7 @@ export function ChatInterface({ character, mission, onBack }: ChatInterfaceProps
 
     const userMessage: ChatMessage = {
       id: Date.now().toString(),
-      session_id: "demo",
+      session_id: sessionId || "demo",
       role: "user",
       content: content.trim(),
       created_at: new Date().toISOString(),
@@ -55,7 +56,7 @@ export function ChatInterface({ character, mission, onBack }: ChatInterfaceProps
     setTimeout(() => {
       const aiMessage: ChatMessage = {
         id: (Date.now() + 1).toString(),
-        session_id: "demo",
+        session_id: sessionId || "demo",
         role: "assistant",
         content: `Great choice! I have a few time slots available. Which one works best for you?`,
         suggested_options: ["10:00 AM", "2:00 PM", "4:00 PM"],
