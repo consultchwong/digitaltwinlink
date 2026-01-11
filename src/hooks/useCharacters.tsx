@@ -72,10 +72,10 @@ export function useCharacters() {
         .insert({
           user_id: user.id,
           name,
-          v3_data: v3Data,
+          v3_data: v3Data as unknown as Record<string, unknown>,
           avatar_url: avatarUrl,
           background_url: backgroundUrl,
-        })
+        } as never)
         .select()
         .single();
 

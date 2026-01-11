@@ -67,8 +67,8 @@ export function useSessions() {
         .insert({
           character_id: characterId,
           sender_id: user.id,
-          mission: mission,
-        })
+          mission: mission as unknown as Record<string, unknown>,
+        } as never)
         .select()
         .single();
 
