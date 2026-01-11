@@ -14,7 +14,142 @@ export type Database = {
   }
   public: {
     Tables: {
-      [_ in never]: never
+      characters: {
+        Row: {
+          avatar_url: string | null
+          background_url: string | null
+          created_at: string
+          id: string
+          name: string
+          updated_at: string
+          user_id: string
+          v3_data: Json
+        }
+        Insert: {
+          avatar_url?: string | null
+          background_url?: string | null
+          created_at?: string
+          id?: string
+          name: string
+          updated_at?: string
+          user_id: string
+          v3_data?: Json
+        }
+        Update: {
+          avatar_url?: string | null
+          background_url?: string | null
+          created_at?: string
+          id?: string
+          name?: string
+          updated_at?: string
+          user_id?: string
+          v3_data?: Json
+        }
+        Relationships: []
+      }
+      chat_messages: {
+        Row: {
+          content: string
+          created_at: string
+          id: string
+          role: string
+          session_id: string
+          suggested_options: Json | null
+        }
+        Insert: {
+          content: string
+          created_at?: string
+          id?: string
+          role: string
+          session_id: string
+          suggested_options?: Json | null
+        }
+        Update: {
+          content?: string
+          created_at?: string
+          id?: string
+          role?: string
+          session_id?: string
+          suggested_options?: Json | null
+        }
+        Relationships: [
+          {
+            foreignKeyName: "chat_messages_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
+      profiles: {
+        Row: {
+          avatar_url: string | null
+          created_at: string
+          display_name: string | null
+          id: string
+          updated_at: string
+          user_id: string
+        }
+        Insert: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id: string
+        }
+        Update: {
+          avatar_url?: string | null
+          created_at?: string
+          display_name?: string | null
+          id?: string
+          updated_at?: string
+          user_id?: string
+        }
+        Relationships: []
+      }
+      sessions: {
+        Row: {
+          character_id: string
+          completed_at: string | null
+          created_at: string
+          id: string
+          link_token: string
+          mission: Json
+          sender_id: string | null
+          status: string
+        }
+        Insert: {
+          character_id: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          link_token?: string
+          mission?: Json
+          sender_id?: string | null
+          status?: string
+        }
+        Update: {
+          character_id?: string
+          completed_at?: string | null
+          created_at?: string
+          id?: string
+          link_token?: string
+          mission?: Json
+          sender_id?: string | null
+          status?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "sessions_character_id_fkey"
+            columns: ["character_id"]
+            isOneToOne: false
+            referencedRelation: "characters"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
     }
     Views: {
       [_ in never]: never

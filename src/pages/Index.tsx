@@ -7,11 +7,12 @@ import { CTASection } from "@/components/landing/CTASection";
 import { AuthModal } from "@/components/auth/AuthModal";
 import { Dashboard } from "@/components/dashboard/Dashboard";
 import { Button } from "@/components/ui/button";
-import { Moon, Sun } from "lucide-react";
+import { Moon, Sun, Loader2 } from "lucide-react";
+import { useAuth } from "@/hooks/useAuth";
 
 const Index = () => {
+  const { user, isLoading } = useAuth();
   const [isAuthModalOpen, setIsAuthModalOpen] = useState(false);
-  const [isAuthenticated, setIsAuthenticated] = useState(false);
   const [isGuest, setIsGuest] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
@@ -34,15 +35,18 @@ const Index = () => {
     setIsAuthModalOpen(false);
   };
 
-  const handleGoogleSignIn = () => {
-    // Simulated auth
-    setIsAuthenticated(true);
-    setIsAuthModalOpen(false);
-  };
+  // Show loading state
+  if (isLoading) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center">
+        <Loader2 className="w-8 h-8 animate-spin text-primary" />
+      </div>
+    );
+  }
 
   // Show dashboard if authenticated or guest
-  if (isAuthenticated || isGuest) {
-    return <Dashboard />;
+  if (user || isGuest) {
+    return <Dashboard isGuest={isGuest} />;
   }
 
   return (
@@ -175,7 +179,6 @@ const Index = () => {
         isOpen={isAuthModalOpen}
         onClose={() => setIsAuthModalOpen(false)}
         onGuestContinue={handleGuestContinue}
-        onGoogleSignIn={handleGoogleSignIn}
       />
     </div>
   );
