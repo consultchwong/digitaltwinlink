@@ -25,11 +25,32 @@ const SessionPage = () => {
       }
 
       try {
-        // Fetch session with character
+        // First, verify the link token and grant database-level access
+        // This calls a secure server-side function that validates the token
+        // and creates an access record for RLS enforcement
+        const { data: accessData, error: accessError } = await supabase
+          .rpc("verify_session_access", { session_link_token: token });
+
+        if (accessError) {
+          console.error("Error verifying session access:", accessError);
+          setError("Failed to verify session access");
+          setIsLoading(false);
+          return;
+        }
+
+        if (!accessData || accessData.length === 0) {
+          setError("Session not found or has expired");
+          setIsLoading(false);
+          return;
+        }
+
+        const sessionId = accessData[0].session_id;
+
+        // Now fetch the session data - RLS will allow access because we have a valid access record
         const { data: sessionData, error: sessionError } = await supabase
           .from("sessions")
           .select("*, characters(*)")
-          .eq("link_token", token)
+          .eq("id", sessionId)
           .maybeSingle();
 
         if (sessionError) throw sessionError;
