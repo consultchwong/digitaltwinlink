@@ -8,13 +8,12 @@ export function useImageGeneration() {
 
   const generateImage = async (
     prompt: string,
-    type: "avatar" | "background" | "full-scene",
-    userId: string
+    type: "avatar" | "background" | "full-scene"
   ): Promise<string | null> => {
     setIsGenerating(true);
     try {
       const { data, error } = await supabase.functions.invoke("generate-character-image", {
-        body: { prompt, type, userId },
+        body: { prompt, type },
       });
 
       if (error) {
