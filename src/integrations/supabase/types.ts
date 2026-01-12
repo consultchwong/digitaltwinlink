@@ -141,6 +141,27 @@ export type Database = {
           },
         ]
       }
+      session_access_attempts: {
+        Row: {
+          attempted_at: string
+          id: string
+          ip_hash: string
+          success: boolean
+        }
+        Insert: {
+          attempted_at?: string
+          id?: string
+          ip_hash: string
+          success?: boolean
+        }
+        Update: {
+          attempted_at?: string
+          id?: string
+          ip_hash?: string
+          success?: boolean
+        }
+        Relationships: []
+      }
       sessions: {
         Row: {
           character_id: string
@@ -187,6 +208,7 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
+      cleanup_old_access_attempts: { Args: never; Returns: undefined }
       has_session_access: {
         Args: { check_session_id: string }
         Returns: boolean
