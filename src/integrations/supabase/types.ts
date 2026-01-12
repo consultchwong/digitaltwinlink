@@ -109,6 +109,38 @@ export type Database = {
         }
         Relationships: []
       }
+      session_access: {
+        Row: {
+          access_token: string
+          created_at: string
+          expires_at: string
+          id: string
+          session_id: string
+        }
+        Insert: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_id: string
+        }
+        Update: {
+          access_token?: string
+          created_at?: string
+          expires_at?: string
+          id?: string
+          session_id?: string
+        }
+        Relationships: [
+          {
+            foreignKeyName: "session_access_session_id_fkey"
+            columns: ["session_id"]
+            isOneToOne: false
+            referencedRelation: "sessions"
+            referencedColumns: ["id"]
+          },
+        ]
+      }
       sessions: {
         Row: {
           character_id: string
@@ -155,7 +187,17 @@ export type Database = {
       [_ in never]: never
     }
     Functions: {
-      [_ in never]: never
+      has_session_access: {
+        Args: { check_session_id: string }
+        Returns: boolean
+      }
+      verify_session_access: {
+        Args: { session_link_token: string }
+        Returns: {
+          access_token: string
+          session_id: string
+        }[]
+      }
     }
     Enums: {
       [_ in never]: never
