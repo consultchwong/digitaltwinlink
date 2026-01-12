@@ -120,7 +120,7 @@ export function CharacterEditorModal({ isOpen, onClose, onSave, editingCharacter
   const handleGenerateAvatar = async () => {
     if (!user || !imagePrompt.trim()) return;
     const prompt = imagePrompt || `${character.name}, ${character.description}`;
-    const url = await generateImage(prompt, "avatar", user.id);
+    const url = await generateImage(prompt, "avatar");
     if (url) {
       setAvatarUrl(url);
       setShowImagePrompt(null);
@@ -131,7 +131,7 @@ export function CharacterEditorModal({ isOpen, onClose, onSave, editingCharacter
   const handleGenerateBackground = async () => {
     if (!user || !imagePrompt.trim()) return;
     const prompt = imagePrompt || `Background for ${character.name}: ${character.scenario || character.description}`;
-    const url = await generateImage(prompt, "background", user.id);
+    const url = await generateImage(prompt, "background");
     if (url) {
       setBackgroundUrl(url);
       setShowImagePrompt(null);
@@ -143,12 +143,12 @@ export function CharacterEditorModal({ isOpen, onClose, onSave, editingCharacter
     if (!user || !imagePrompt.trim()) return;
     
     // Generate full scene first
-    const sceneUrl = await generateImage(imagePrompt, "full-scene", user.id);
+    const sceneUrl = await generateImage(imagePrompt, "full-scene");
     if (sceneUrl) {
       setBackgroundUrl(sceneUrl);
       // Then generate avatar based on same prompt
       const avatarPromptText = imagePrompt.split(",")[0]; // Use first part for avatar
-      const avatarUrlResult = await generateImage(avatarPromptText, "avatar", user.id);
+      const avatarUrlResult = await generateImage(avatarPromptText, "avatar");
       if (avatarUrlResult) {
         setAvatarUrl(avatarUrlResult);
       }
