@@ -26,12 +26,12 @@ export function Dashboard({ isGuest }: DashboardProps) {
   const [isSidebarOpen, setIsSidebarOpen] = useState(false);
   const [isDarkMode, setIsDarkMode] = useState(true);
 
-  const handleCreateCharacter = async (v3Data: CharacterV3Data) => {
+  const handleCreateCharacter = async (v3Data: CharacterV3Data, avatarUrl?: string, backgroundUrl?: string) => {
     if (isGuest) {
       toast.error("Please sign in to create characters");
       return;
     }
-    await createCharacter(v3Data.name, v3Data);
+    await createCharacter(v3Data.name, v3Data, avatarUrl, backgroundUrl);
   };
 
   const handleSelectCharacterForMission = (character: DbCharacter) => {
