@@ -10,6 +10,7 @@ interface MissionSelectorModalProps {
   isOpen: boolean;
   onClose: () => void;
   onSelect: (mission: Mission) => void;
+  character?: { name: string };
 }
 
 const missionTemplates = [
@@ -63,7 +64,7 @@ const missionTemplates = [
   },
 ];
 
-export function MissionSelectorModal({ isOpen, onClose, onSelect }: MissionSelectorModalProps) {
+export function MissionSelectorModal({ isOpen, onClose, onSelect, character }: MissionSelectorModalProps) {
   const [selectedTemplate, setSelectedTemplate] = useState<typeof missionTemplates[0] | null>(null);
   const [missionTitle, setMissionTitle] = useState("");
   const [formData, setFormData] = useState<Record<string, string>>({});
