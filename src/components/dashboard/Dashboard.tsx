@@ -6,16 +6,18 @@ import { useSessions, DbSession } from "@/hooks/useSessions";
 import { TopBar } from "./TopBar";
 import { SessionList } from "./SessionList";
 import { EmptyChatPanel } from "./EmptyChatPanel";
-import { CharacterModal } from "./CharacterModal";
+import { CharacterEditor } from "./CharacterEditor";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { MissionSelectorModal } from "@/components/mission/MissionSelectorModal";
-import { Character, Mission } from "@/types/character";
+import { Character, Mission, CharacterV3Data } from "@/types/character";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
 
 interface DashboardProps {
   isGuest?: boolean;
 }
+
+type ViewMode = "chat" | "character-editor";
 
 export function Dashboard({ isGuest }: DashboardProps) {
   const { user } = useAuth();
@@ -24,7 +26,8 @@ export function Dashboard({ isGuest }: DashboardProps) {
   
   const [isDarkMode, setIsDarkMode] = useState(true);
   const [selectedSession, setSelectedSession] = useState<DbSession | null>(null);
-  const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
+  const [viewMode, setViewMode] = useState<ViewMode>("chat");
+  const [editingCharacter, setEditingCharacter] = useState<DbCharacter | null>(null);
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
   const [selectedCharacterForMission, setSelectedCharacterForMission] = useState<DbCharacter | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
@@ -32,9 +35,15 @@ export function Dashboard({ isGuest }: DashboardProps) {
   const isMobile = useIsMobile();
 
   useEffect(() => {
-    // Initialize dark mode
     document.documentElement.classList.add("dark");
   }, []);
+
+  // Auto-hide sidebar on mobile when a session is selected
+  useEffect(() => {
+    if (isMobile && selectedSession) {
+      setShowSidebar(false);
+    }
+  }, [isMobile, selectedSession]);
 
   const toggleDarkMode = () => {
     setIsDarkMode(!isDarkMode);
@@ -43,19 +52,55 @@ export function Dashboard({ isGuest }: DashboardProps) {
 
   const handleNewSession = () => {
     if (characters.length === 0) {
-      setIsCharacterModalOpen(true);
+      // No characters, open character editor
+      setEditingCharacter(null);
+      setViewMode("character-editor");
     } else if (characters.length === 1) {
+      // Single character, go directly to mission
       setSelectedCharacterForMission(characters[0]);
       setIsMissionModalOpen(true);
     } else {
-      setIsCharacterModalOpen(true);
+      // Multiple characters, select one first for mission
+      setSelectedCharacterForMission(characters[0]);
+      setIsMissionModalOpen(true);
     }
   };
 
-  const handleSelectCharacterForMission = (character: DbCharacter) => {
-    setSelectedCharacterForMission(character);
-    setIsCharacterModalOpen(false);
-    setIsMissionModalOpen(true);
+  const handleOpenCharacterEditor = (character?: DbCharacter) => {
+    setEditingCharacter(character || null);
+    setViewMode("character-editor");
+    if (isMobile) {
+      setShowSidebar(false);
+    }
+  };
+
+  const handleSaveCharacter = async (
+    v3Data: CharacterV3Data,
+    avatarUrl?: string,
+    backgroundUrl?: string
+  ) => {
+    if (editingCharacter) {
+      await updateCharacter(editingCharacter.id, {
+        name: v3Data.name,
+        v3_data: v3Data,
+        avatar_url: avatarUrl,
+        background_url: backgroundUrl,
+      });
+    } else {
+      const newCharacter = await createCharacter(v3Data.name, v3Data, avatarUrl, backgroundUrl);
+      // After creating, ask for mission
+      if (newCharacter) {
+        setSelectedCharacterForMission(newCharacter);
+        setIsMissionModalOpen(true);
+      }
+    }
+    setViewMode("chat");
+    setEditingCharacter(null);
+  };
+
+  const handleCancelEditor = () => {
+    setViewMode("chat");
+    setEditingCharacter(null);
   };
 
   const handleCreateMission = async (mission: Mission) => {
@@ -66,6 +111,7 @@ export function Dashboard({ isGuest }: DashboardProps) {
       setSelectedSession(newSession);
       setIsMissionModalOpen(false);
       setSelectedCharacterForMission(null);
+      setViewMode("chat");
       if (isMobile) {
         setShowSidebar(false);
       }
@@ -74,6 +120,7 @@ export function Dashboard({ isGuest }: DashboardProps) {
 
   const handleSelectSession = (session: DbSession) => {
     setSelectedSession(session);
+    setViewMode("chat");
     if (isMobile) {
       setShowSidebar(false);
     }
@@ -84,7 +131,6 @@ export function Dashboard({ isGuest }: DashboardProps) {
     setShowSidebar(true);
   };
 
-  // Get character for selected session
   const getSessionCharacter = (session: DbSession): Character => {
     const dbChar = characters.find((c) => c.id === session.character_id);
     if (dbChar) {
@@ -98,7 +144,6 @@ export function Dashboard({ isGuest }: DashboardProps) {
         updated_at: dbChar.updated_at,
       };
     }
-    // Fallback character
     return {
       id: session.character_id,
       name: "Unknown",
@@ -114,82 +159,95 @@ export function Dashboard({ isGuest }: DashboardProps) {
     };
   };
 
+  const renderMainContent = () => {
+    if (viewMode === "character-editor") {
+      return (
+        <CharacterEditor
+          editingCharacter={editingCharacter}
+          onSave={handleSaveCharacter}
+          onCancel={handleCancelEditor}
+        />
+      );
+    }
+
+    if (selectedSession) {
+      return (
+        <ChatInterface
+          character={getSessionCharacter(selectedSession)}
+          mission={selectedSession.mission}
+          sessionId={selectedSession.id}
+          onBack={isMobile ? handleBackToList : undefined}
+        />
+      );
+    }
+
+    return (
+      <EmptyChatPanel
+        onNewSession={handleNewSession}
+        onOpenCharacters={() => handleOpenCharacterEditor()}
+        hasCharacters={characters.length > 0}
+      />
+    );
+  };
+
   return (
     <div className="flex flex-col h-screen bg-background">
       {/* Top Bar */}
       <TopBar
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
-        onOpenCharacters={() => setIsCharacterModalOpen(true)}
+        onOpenCharacters={() => handleOpenCharacterEditor()}
         showMenuButton={isMobile && !showSidebar}
         onToggleSidebar={() => setShowSidebar(true)}
       />
 
       {/* Main content */}
-      <div className="flex flex-1 overflow-hidden">
+      <div className="flex flex-1 overflow-hidden relative">
         {/* Session Sidebar */}
-        <AnimatePresence mode="wait">
-          {(showSidebar || !isMobile) && (
-            <motion.div
-              initial={isMobile ? { x: -300 } : false}
-              animate={{ x: 0 }}
-              exit={{ x: -300 }}
-              transition={{ type: "spring", damping: 25, stiffness: 300 }}
-              className={cn(
-                "border-r border-border shrink-0",
-                isMobile ? "absolute inset-y-14 left-0 z-20 w-80" : "w-80 lg:w-96"
+        <AnimatePresence>
+          {showSidebar && (
+            <>
+              {/* Overlay for mobile */}
+              {isMobile && (
+                <motion.div
+                  initial={{ opacity: 0 }}
+                  animate={{ opacity: 1 }}
+                  exit={{ opacity: 0 }}
+                  onClick={() => setShowSidebar(false)}
+                  className="fixed inset-0 z-20 bg-black/50"
+                  style={{ top: 56 }}
+                />
               )}
-            >
-              <SessionList
-                sessions={sessions}
-                characters={characters}
-                selectedSessionId={selectedSession?.id}
-                isLoading={sessionsLoading || charactersLoading}
-                onSelectSession={handleSelectSession}
-                onNewSession={handleNewSession}
-              />
-            </motion.div>
+              <motion.div
+                initial={isMobile ? { x: "-100%" } : { opacity: 1 }}
+                animate={{ x: 0, opacity: 1 }}
+                exit={isMobile ? { x: "-100%" } : { opacity: 1 }}
+                transition={{ type: "spring", damping: 25, stiffness: 300 }}
+                className={cn(
+                  "border-r border-border bg-sidebar-background shrink-0 z-30",
+                  isMobile 
+                    ? "fixed left-0 top-14 bottom-0 w-[280px]" 
+                    : "relative w-80 lg:w-96"
+                )}
+              >
+                <SessionList
+                  sessions={sessions}
+                  characters={characters}
+                  selectedSessionId={selectedSession?.id}
+                  isLoading={sessionsLoading || charactersLoading}
+                  onSelectSession={handleSelectSession}
+                  onNewSession={handleNewSession}
+                />
+              </motion.div>
+            </>
           )}
         </AnimatePresence>
 
-        {/* Overlay for mobile */}
-        {isMobile && showSidebar && selectedSession && (
-          <motion.div
-            initial={{ opacity: 0 }}
-            animate={{ opacity: 1 }}
-            exit={{ opacity: 0 }}
-            onClick={() => setShowSidebar(false)}
-            className="absolute inset-0 z-10 bg-black/50"
-          />
-        )}
-
-        {/* Chat Panel */}
-        <div className="flex-1 min-w-0">
-          {selectedSession ? (
-            <ChatInterface
-              character={getSessionCharacter(selectedSession)}
-              mission={selectedSession.mission}
-              sessionId={selectedSession.id}
-              onBack={isMobile ? handleBackToList : undefined}
-            />
-          ) : (
-            <EmptyChatPanel
-              onNewSession={handleNewSession}
-              onOpenCharacters={() => setIsCharacterModalOpen(true)}
-              hasCharacters={characters.length > 0}
-            />
-          )}
+        {/* Main Panel */}
+        <div className="flex-1 min-w-0 overflow-hidden">
+          {renderMainContent()}
         </div>
       </div>
-
-      {/* Character Modal */}
-      <CharacterModal
-        isOpen={isCharacterModalOpen}
-        onClose={() => setIsCharacterModalOpen(false)}
-        characters={characters}
-        onDeleteCharacter={deleteCharacter}
-        onSelectForMission={handleSelectCharacterForMission}
-      />
 
       {/* Mission Modal */}
       <MissionSelectorModal
