@@ -1,10 +1,9 @@
-import { motion } from "framer-motion";
 import {
   Menu,
   Moon,
   Sun,
   Settings,
-  Users,
+  Plus,
   LogOut,
   User,
   ChevronDown,
@@ -59,15 +58,15 @@ export function TopBar({
 
       {/* Right side actions */}
       <div className="flex items-center gap-2">
-        {/* Characters button */}
+        {/* Add Character button */}
         <Button
-          variant="ghost"
+          variant="default"
           size="sm"
           onClick={onOpenCharacters}
           className="hidden sm:flex"
         >
-          <Users className="w-4 h-4 mr-2" />
-          Characters
+          <Plus className="w-4 h-4 mr-2" />
+          New Character
         </Button>
 
         {/* Theme toggle */}
@@ -94,8 +93,8 @@ export function TopBar({
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onOpenCharacters} className="sm:hidden">
-              <Users className="w-4 h-4 mr-2" />
-              Characters
+              <Plus className="w-4 h-4 mr-2" />
+              New Character
             </DropdownMenuItem>
             <DropdownMenuItem onClick={onOpenSettings}>
               <Settings className="w-4 h-4 mr-2" />
