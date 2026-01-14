@@ -23,6 +23,7 @@ interface TopBarProps {
   isDarkMode: boolean;
   onToggleDarkMode: () => void;
   onOpenCharacters: () => void;
+  onNewCharacter: () => void;
   onOpenSettings?: () => void;
   onToggleSidebar?: () => void;
   showMenuButton?: boolean;
@@ -32,6 +33,7 @@ export function TopBar({
   isDarkMode,
   onToggleDarkMode,
   onOpenCharacters,
+  onNewCharacter,
   onOpenSettings,
   onToggleSidebar,
   showMenuButton,
@@ -58,15 +60,26 @@ export function TopBar({
 
       {/* Right side actions */}
       <div className="flex items-center gap-2">
-        {/* Add Character button */}
+        {/* Characters button */}
         <Button
-          variant="default"
+          variant="outline"
           size="sm"
           onClick={onOpenCharacters}
           className="hidden sm:flex"
         >
+          <User className="w-4 h-4 mr-2" />
+          Characters
+        </Button>
+
+        {/* Add Character button */}
+        <Button
+          variant="default"
+          size="sm"
+          onClick={onNewCharacter}
+          className="hidden sm:flex"
+        >
           <Plus className="w-4 h-4 mr-2" />
-          New Character
+          New
         </Button>
 
         {/* Theme toggle */}
@@ -93,6 +106,10 @@ export function TopBar({
             </div>
             <DropdownMenuSeparator />
             <DropdownMenuItem onClick={onOpenCharacters} className="sm:hidden">
+              <User className="w-4 h-4 mr-2" />
+              Characters
+            </DropdownMenuItem>
+            <DropdownMenuItem onClick={onNewCharacter} className="sm:hidden">
               <Plus className="w-4 h-4 mr-2" />
               New Character
             </DropdownMenuItem>

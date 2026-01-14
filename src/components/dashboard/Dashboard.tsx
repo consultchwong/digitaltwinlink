@@ -7,6 +7,7 @@ import { TopBar } from "./TopBar";
 import { SessionList } from "./SessionList";
 import { EmptyChatPanel } from "./EmptyChatPanel";
 import { CharacterEditor } from "./CharacterEditor";
+import { CharacterModal } from "./CharacterModal";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { MissionSelectorModal } from "@/components/mission/MissionSelectorModal";
 import { Character, Mission, CharacterV3Data } from "@/types/character";
@@ -29,6 +30,7 @@ export function Dashboard({ isGuest }: DashboardProps) {
   const [viewMode, setViewMode] = useState<ViewMode>("chat");
   const [editingCharacter, setEditingCharacter] = useState<DbCharacter | null>(null);
   const [isMissionModalOpen, setIsMissionModalOpen] = useState(false);
+  const [isCharacterModalOpen, setIsCharacterModalOpen] = useState(false);
   const [selectedCharacterForMission, setSelectedCharacterForMission] = useState<DbCharacter | null>(null);
   const [showSidebar, setShowSidebar] = useState(true);
   
@@ -67,11 +69,16 @@ export function Dashboard({ isGuest }: DashboardProps) {
   };
 
   const handleOpenCharacterEditor = (character?: DbCharacter) => {
+    setIsCharacterModalOpen(false); // Close modal first
     setEditingCharacter(character || null);
     setViewMode("character-editor");
     if (isMobile) {
       setShowSidebar(false);
     }
+  };
+
+  const handleOpenCharacterModal = () => {
+    setIsCharacterModalOpen(true);
   };
 
   const handleSaveCharacter = async (
@@ -196,7 +203,8 @@ export function Dashboard({ isGuest }: DashboardProps) {
       <TopBar
         isDarkMode={isDarkMode}
         onToggleDarkMode={toggleDarkMode}
-        onOpenCharacters={() => handleOpenCharacterEditor()}
+        onOpenCharacters={handleOpenCharacterModal}
+        onNewCharacter={() => handleOpenCharacterEditor()}
         showMenuButton={isMobile && !showSidebar}
         onToggleSidebar={() => setShowSidebar(true)}
       />
@@ -258,6 +266,16 @@ export function Dashboard({ isGuest }: DashboardProps) {
         }}
         onSelect={handleCreateMission}
         character={selectedCharacterForMission || undefined}
+      />
+
+      {/* Character Modal */}
+      <CharacterModal
+        isOpen={isCharacterModalOpen}
+        onClose={() => setIsCharacterModalOpen(false)}
+        characters={characters}
+        onDeleteCharacter={deleteCharacter}
+        onEditCharacter={handleOpenCharacterEditor}
+        onAddCharacter={() => handleOpenCharacterEditor()}
       />
     </div>
   );

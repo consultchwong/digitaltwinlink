@@ -1,4 +1,3 @@
-import { useState } from "react";
 import { motion } from "framer-motion";
 import { Plus, Trash2, Edit, User } from "lucide-react";
 import { Button } from "@/components/ui/button";
@@ -10,15 +9,15 @@ import {
   DialogHeader,
   DialogTitle,
 } from "@/components/ui/dialog";
-import { DbCharacter, useCharacters } from "@/hooks/useCharacters";
-import { CharacterEditorModal } from "@/components/character/CharacterEditorModal";
-import { CharacterV3Data, Character } from "@/types/character";
+import { DbCharacter } from "@/hooks/useCharacters";
 
 interface CharacterModalProps {
   isOpen: boolean;
   onClose: () => void;
   characters: DbCharacter[];
   onDeleteCharacter?: (id: string) => void;
+  onEditCharacter?: (character: DbCharacter) => void;
+  onAddCharacter?: () => void;
   onSelectForMission?: (character: DbCharacter) => void;
 }
 
@@ -27,58 +26,41 @@ export function CharacterModal({
   onClose,
   characters,
   onDeleteCharacter,
+  onEditCharacter,
+  onAddCharacter,
   onSelectForMission,
 }: CharacterModalProps) {
-  const [isEditorOpen, setIsEditorOpen] = useState(false);
-  const [editingCharacter, setEditingCharacter] = useState<DbCharacter | null>(null);
-  const { createCharacter, updateCharacter } = useCharacters();
-
-  const handleOpenEditor = (character?: DbCharacter) => {
-    setEditingCharacter(character || null);
-    setIsEditorOpen(true);
+  const handleAddCharacter = () => {
+    onClose();
+    onAddCharacter?.();
   };
 
-  const handleSaveCharacter = async (
-    v3Data: CharacterV3Data,
-    avatarUrl?: string,
-    backgroundUrl?: string
-  ) => {
-    if (editingCharacter) {
-      await updateCharacter(editingCharacter.id, {
-        name: v3Data.name,
-        v3_data: v3Data,
-        avatar_url: avatarUrl,
-        background_url: backgroundUrl,
-      });
-    } else {
-      await createCharacter(v3Data.name, v3Data, avatarUrl, backgroundUrl);
-    }
-    setIsEditorOpen(false);
-    setEditingCharacter(null);
+  const handleEditCharacter = (character: DbCharacter) => {
+    onClose();
+    onEditCharacter?.(character);
   };
 
   return (
-    <>
-      <Dialog open={isOpen} onOpenChange={onClose}>
-        <DialogContent className="sm:max-w-lg">
-          <DialogHeader>
-            <DialogTitle className="flex items-center gap-2">
-              <User className="w-5 h-5" />
-              Your Characters
-            </DialogTitle>
-          </DialogHeader>
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-lg">
+        <DialogHeader>
+          <DialogTitle className="flex items-center gap-2">
+            <User className="w-5 h-5" />
+            Your Characters
+          </DialogTitle>
+        </DialogHeader>
 
-          <div className="mt-4">
-            <Button
-              onClick={() => handleOpenEditor()}
-              className="w-full mb-4"
-              variant="outline"
-            >
-              <Plus className="w-4 h-4 mr-2" />
-              Create New Character
-            </Button>
+        <div className="mt-4">
+          <Button
+            onClick={handleAddCharacter}
+            className="w-full mb-4"
+            variant="outline"
+          >
+            <Plus className="w-4 h-4 mr-2" />
+            Create New Character
+          </Button>
 
-            <ScrollArea className="h-[300px]">
+          <ScrollArea className="h-[300px]">
               {characters.length === 0 ? (
                 <div className="text-center py-12 text-muted-foreground">
                   <User className="w-12 h-12 mx-auto mb-4 opacity-50" />
@@ -111,22 +93,15 @@ export function CharacterModal({
                       </div>
 
                       <div className="flex items-center gap-1 opacity-0 group-hover:opacity-100 transition-opacity">
-                        {onSelectForMission && (
+                        {onEditCharacter && (
                           <Button
-                            size="sm"
+                            size="icon"
                             variant="ghost"
-                            onClick={() => onSelectForMission(character)}
+                            onClick={() => handleEditCharacter(character)}
                           >
-                            Select
+                            <Edit className="w-4 h-4" />
                           </Button>
                         )}
-                        <Button
-                          size="icon"
-                          variant="ghost"
-                          onClick={() => handleOpenEditor(character)}
-                        >
-                          <Edit className="w-4 h-4" />
-                        </Button>
                         {onDeleteCharacter && (
                           <Button
                             size="icon"
@@ -146,24 +121,5 @@ export function CharacterModal({
           </div>
         </DialogContent>
       </Dialog>
-
-      <CharacterEditorModal
-        isOpen={isEditorOpen}
-        onClose={() => {
-          setIsEditorOpen(false);
-          setEditingCharacter(null);
-        }}
-        onSave={handleSaveCharacter}
-        editingCharacter={editingCharacter ? {
-          id: editingCharacter.id,
-          name: editingCharacter.name,
-          avatar_url: editingCharacter.avatar_url || undefined,
-          background_url: editingCharacter.background_url || undefined,
-          v3_data: editingCharacter.v3_data,
-          created_at: editingCharacter.created_at,
-          updated_at: editingCharacter.updated_at,
-        } : null}
-      />
-    </>
   );
 }
