@@ -10,6 +10,7 @@ import { CharacterEditor } from "./CharacterEditor";
 import { CharacterModal } from "./CharacterModal";
 import { ChatInterface } from "@/components/chat/ChatInterface";
 import { MissionSelectorModal } from "@/components/mission/MissionSelectorModal";
+import { SettingsPanel } from "@/components/settings/SettingsPanel";
 import { Character, Mission, CharacterV3Data } from "@/types/character";
 import { useIsMobile } from "@/hooks/use-mobile";
 import { cn } from "@/lib/utils";
@@ -18,7 +19,7 @@ interface DashboardProps {
   isGuest?: boolean;
 }
 
-type ViewMode = "chat" | "character-editor";
+type ViewMode = "chat" | "character-editor" | "settings";
 
 export function Dashboard({ isGuest }: DashboardProps) {
   const { user } = useAuth();
@@ -166,7 +167,24 @@ export function Dashboard({ isGuest }: DashboardProps) {
     };
   };
 
+  const handleOpenSettings = () => {
+    setViewMode("settings");
+    if (isMobile) {
+      setShowSidebar(false);
+    }
+  };
+
+  const handleCloseSettings = () => {
+    setViewMode("chat");
+  };
+
   const renderMainContent = () => {
+    if (viewMode === "settings") {
+      return (
+        <SettingsPanel onBack={handleCloseSettings} />
+      );
+    }
+
     if (viewMode === "character-editor") {
       return (
         <CharacterEditor
@@ -205,6 +223,7 @@ export function Dashboard({ isGuest }: DashboardProps) {
         onToggleDarkMode={toggleDarkMode}
         onOpenCharacters={handleOpenCharacterModal}
         onNewCharacter={() => handleOpenCharacterEditor()}
+        onOpenSettings={handleOpenSettings}
         showMenuButton={isMobile && !showSidebar}
         onToggleSidebar={() => setShowSidebar(true)}
       />
